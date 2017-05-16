@@ -1,0 +1,174 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Tue May 16 12:26:06 2017
+
+@author: Kas
+"""
+
+import numpy as np
+from matplotlib import pyplot as plt
+from numpy.fft import fft,ifft
+
+#Question 1
+
+def shift(x,n=0):
+	vec=x*0 
+	vec[n]=1
+	vecft=fft(vec)
+	xft=fft(x)
+	return np.real(ifft(xft*vecft))
+
+if __name__=='__main__':
+	
+    x=np.arange(-30,30,0.1)
+    sigma=2
+    y=np.exp(-0.5*x**2/sigma**2)
+    yshift=shift(y,y.size/2)
+    plt.ion()
+    plt.plot(x,y)
+    plt.plot(x,yshift)
+    
+    
+#Question 2
+
+
+def corr(a,b):
+    assert(a.size==b.size)
+    aft=fft(a)
+    bft=fft(b)
+    bftconj=np.conj(bft)
+    return np.real(ifft(aft*bftconj))
+if __name__=='__main__':
+    a=np.arange(-30,30,0.1)
+    sigma=2
+    b=np.exp(-0.5*a**2/sigma**2)
+    bcorr=corr(b,b)
+    plt.plot(a,bcorr)
+    plt.show()
+    
+#Question 3
+
+if __name__=='__main__':
+    a=np.arange(-20,20,0.1)
+    sigma=2
+    b=np.exp(-0.5*a**2/sigma**2)
+    bcorr=corr(b,b)
+    bshift=shift(b,b.size/4)
+    bshiftcorr=corr(bshift,bshift)
+    meanerr=np.mean(np.abs(bcorr-bshiftcorr))
+    print("")
+    print ("The mean difference between the two correlation functions is " + repr(meanerr))
+    print("")
+    plt.plot(a,bcorr)
+    plt.plot(a,bshiftcorr)
+    plt.show()
+
+#Question 4
+
+def conv_nowrap(c,d):
+	assert(c.size==d.size) 
+	cc=np.zeros(2*c.size)
+	c=cc[0:c.size]
+	dd=np.zeros(2*d.size)
+	d=dd[0:d.size]
+	ccft=fft(cc)
+	ddft=fft(dd)
+	vector=np.real(ifft(ccft*ddft))
+	return vector[0:c.size]
+if __name__=='__main__':
+	c=np.arange(-30,30,0.1)
+	sigma=2
+	d=np.exp(-0.5*c**2/sigma**2)
+	d=d/d.sum()
+	dconv=conv_nowrap(d,d)
+	plt.plot(c,d)
+	plt.plot(c,dconv)
+	plt.show()
+
+
+#Question 5
+
+class Complex:
+    def __init__(self,r=0,i=0):
+        self.r=r
+        self.i=i
+    def copy(self):
+        return Complex(self.r,self.i)
+    def __add__(self,val):
+        ans=self.copy()
+        if isinstance(val,Complex):
+            ans.r=ans.r+val.r
+            ans.i=ans.i+val.i
+        else:
+            ans.r=ans.r+val
+        return ans
+
+    def __sub__(self,val):
+        ans=self.copy()
+        if isinstance(val,Complex):
+           ans.r=ans.r-val.r
+           ans.i=ans.i-val.i
+        else:
+           ans.r=ans.r-val
+        return ans
+
+    def __mul__(self,val):
+        ans=self.copy()
+        if isinstance(val,Complex):
+           ans.r=self.r*val.r-self.i*val.i
+           ans.i=self.r*val.i+self.i*val.r
+        else:
+           ans.r=ans.r*val
+           ans.i=ans.i*val
+        return ans
+
+    def __truediv__(self,val): 
+        ans=self.copy()
+        if isinstance(val,Complex):
+           val_copy=val.copy()
+           val.i=-1*val.i
+           num=Complex.__mul__(ans,val)
+           dem=Complex.__mul__(val_copy,val)
+           dem=dem.r+dem.i
+           ans.r=num.r/dem
+           ans.i=num.i/dem
+        else:
+           dem=2*val
+           ans.r=ans.r/dem
+           ans.i=ans.i/dem
+        return ans
+
+    def __repr__(self):
+        if (self.i<0):
+            return repr(self.r)+' - '+repr(-1*self.i) +'i'
+        else:
+            return repr(self.r)+' + '+repr(self.i) +'i'
+
+if __name__=='__main__':
+
+    a=Complex(6,2)
+    b=Complex(1,-4)
+    c=a+b
+    print("a=6+i2 plus b=1-i4 is ",c)
+
+    c=a-b
+    print("a=2+i5 minus b=4-i3 is ",c)
+
+    c=a*b
+    print("a=2+i5 multiplied by b=4-i3 is ",c)
+
+    c=a/b
+    print("a=2+i5 divided by b=4-i3 is ",c)
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
